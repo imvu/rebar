@@ -143,7 +143,15 @@ generate_appup_files(NewVerPath, OldVerPath, [{App, {OldVer, NewVer}}|Rest]) ->
     Deleted = [generate_instruction(deleted, File) || File <- DeletedFiles],
     Changed = [generate_instruction(changed, File) || File <- ChangedFiles],
 
-    Inst = lists:append([Added, Deleted, Changed]),
+    SyncNodes =
+        case rebar_config:get_global(appup_sync_nodes, false) of
+            F when F =:= false; F =:= "false" ->
+                [];
+            _ ->
+                [{sync_nodes, NewVer, {erlang, nodes, []}}]
+        end,
+
+    Inst = lists:append([SyncNodes, Added, Deleted, Changed]),
 
     AppUpFile = filename:join([NewEbinDir, atom_to_list(App) ++ ".appup"]),
 
